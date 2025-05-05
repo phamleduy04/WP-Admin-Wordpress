@@ -38,9 +38,11 @@ jobs:
       - name: Create Firefox ZIP
         run: pnpm run zip:firefox
 
-      - name: Get version from package.json
+      - name: Get version from wxt.config.ts
         id: get_version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(grep -o "version: '[0-9]\+\(\.[0-9]\+\)*'" wxt.config.ts | grep -o "[0-9]\+\(\.[0-9]\+\)*")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
@@ -51,7 +53,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            .output/wp-admin-wordpress.chrome.zip
-            .output/wp-admin-wordpress.firefox.zip
+            .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-chrome.zip
+            .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
