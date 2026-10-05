@@ -24,20 +24,20 @@ A browser extension that helps navigate between WordPress admin pages and normal
 
 ## Development
 
-This extension is built with [WXT (Web Extension Tools)](https://wxt.dev/).
+This extension is built with [WXT (Web Extension Tools)](https://wxt.dev/) and uses [Bun](https://bun.com/) as the package manager and runtime.
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start development server
-npm run dev
+bun run dev
 
 # Build for production
-npm run build
+bun run build
 
 # Create distribution ZIP files
-npm run zip
+bun run zip
 ```
 
 ## Releasing New Versions
@@ -48,11 +48,11 @@ Every push to `main` (except Markdown-only changes) runs `.github/workflows/rele
 - Creates a GitHub Release with both ZIPs attached
 - Submits the new version to the Chrome Web Store and Firefox Add-ons for review
 
-For a minor or major release, set `version` in `package.json` yourself (for example `pnpm version minor --no-git-tag-version`) in your PR. The workflow releases that version as-is instead of bumping it.
+For a minor or major release, set `version` in `package.json` yourself (for example `bun pm version minor --no-git-tag-version`) in your PR. The workflow releases that version as-is instead of bumping it.
 
 To check store credentials without submitting, run the workflow manually from the Actions tab with **dry_run** checked.
 
-The submit step needs these repository secrets: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`, `FIREFOX_EXTENSION_ID`, `FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`. Run `pnpm wxt submit init` locally for a guided walkthrough of where to find each value.
+The submit step needs these repository secrets: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`, `FIREFOX_EXTENSION_ID`, `FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`. Run `bunx wxt submit init` locally for a guided walkthrough of where to find each value.
 
 ### Testing a pull request
 
@@ -63,8 +63,8 @@ Every PR runs `.github/workflows/pr-build.yml`, which builds unpacked Chrome and
 ### Building from source (Firefox review)
 
 ```bash
-pnpm install
-pnpm zip:firefox
+bun install
+bun run zip:firefox
 ```
 
 The extension ZIP is written to `.output/`.
