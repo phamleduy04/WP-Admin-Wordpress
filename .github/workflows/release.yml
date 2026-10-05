@@ -35,7 +35,9 @@ jobs:
         with:
           bun-version-file: package.json
 
+      # Committed locally only; pushed after the store submission succeeds
       - name: Bump patch version if the current one is already released
+        id: bump
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,7 +48,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -am "chore: release $VERSION"
-            git push
+            echo "bumped=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Install dependencies
@@ -77,13 +79,40 @@ jobs:
           tag: ${{ steps.get_version.outputs.VERSION }}
           doNotFailIfNotFound: true
 
+      - name: Submit to Chrome Web Store and Firefox Add-ons
+        if: steps.check_release.outputs.id == '' || inputs.dry_run
+        run: |
+          export CHROME_SERVICE_ACCOUNT_PRIVATE_KEY="$(printf '%s' "$CHROME_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64" | base64 -d)"
+          bun --bun wxt submit ${{ inputs.dry_run && '--dry-run' || '' }} \
+            --chrome-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-chrome.zip \
+            --firefox-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip \
+            --firefox-sources-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-sources.zip
+        env:
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64 }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+
+      - name: Push version bump
+        id: push_bump
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       - name: Create Release
         id: create_release
-        if: steps.check_release.outputs.id == ''
+        if: steps.check_release.outputs.id == '' && !inputs.dry_run
         uses: softprops/action-gh-release@v3
         with:
           name: Release ${{ steps.get_version.outputs.VERSION }}
           tag_name: ${{ steps.get_version.outputs.VERSION }}
+          target_commitish: ${{ steps.push_bump.outputs.sha || github.sha }}
           draft: false
           prerelease: false
           files: |
@@ -91,19 +120,3 @@ jobs:
             .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Submit to Chrome Web Store and Firefox Add-ons
-        if: steps.check_release.outputs.id == '' || inputs.dry_run
-        run: |
-          bun --bun wxt submit ${{ inputs.dry_run && '--dry-run' || '' }} \
-            --chrome-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-chrome.zip \
-            --firefox-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip \
-            --firefox-sources-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-sources.zip
-        env:
-          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
-          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
-          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
-          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
-          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
