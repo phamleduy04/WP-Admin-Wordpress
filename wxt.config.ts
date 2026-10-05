@@ -4,7 +4,6 @@ export default defineConfig({
   manifest: {
     name: 'UT Dallas WordPress Admin Switcher',
     description: 'Switch between WordPress pages and their admin versions (for UT Dallas websites)',
-    version: '1.1.1',
     permissions: ['tabs', 'activeTab', 'scripting'],
     host_permissions: ['*://*.utdallas.edu/*'],
     icons: {

@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -11,12 +13,22 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+
+# Queue releases so each run bumps from the latest version on main
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout codes
         uses: actions/checkout@v7
+        with:
+          ref: main
 
       - uses: pnpm/action-setup@v6
         with:
@@ -27,6 +39,20 @@ jobs:
           node-version: '22.x'
           cache: 'pnpm'
           cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Bump patch version if the current one is already released
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$(node -p "require('./package.json').version")" >/dev/null 2>&1; then
+            npm version patch --no-git-tag-version
+            VERSION=$(node -p "require('./package.json').version")
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore: release $VERSION"
+            git push
+          fi
 
       - name: Install dependencies
         run: pnpm install
@@ -43,11 +69,9 @@ jobs:
       - name: Create Firefox ZIP
         run: pnpm run zip:firefox
 
-      - name: Get version from wxt.config.ts
+      - name: Get version from package.json
         id: get_version
-        run: |
-          VERSION=$(grep -o "version: '[0-9]\+\(\.[0-9]\+\)*'" wxt.config.ts | grep -o "[0-9]\+\(\.[0-9]\+\)*")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Check if release exists
         id: check_release
