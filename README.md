@@ -7,6 +7,7 @@ A browser extension that helps navigate between WordPress admin pages and normal
 - Switch from normal pages to WordPress admin pages
 - Switch from WordPress admin pages to normal pages
 - Edit WordPress pages directly from the frontend
+- Find the current page in the WordPress admin list, with its row outlined
 
 ## Installation
 
