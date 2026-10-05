@@ -55,7 +55,7 @@ The submit step needs these repository secrets: `CHROME_EXTENSION_ID`, `CHROME_C
 
 ### Testing a pull request
 
-Every PR runs `.github/workflows/pr-build.yml`, which attaches unpacked Chrome and Firefox builds to the run. Open the PR's **Checks** tab, choose **PR Build**, and download the artifact under **Artifacts**. Then unzip it and:
+Every PR runs `.github/workflows/pr-build.yml`, which builds unpacked Chrome and Firefox extensions and comments download links on the PR. Download one, unzip it, and:
 - Chrome: go to `chrome://extensions/`, enable Developer mode, click "Load unpacked", and select the unzipped folder
 - Firefox: go to `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", and select `manifest.json` in the unzipped folder
 
