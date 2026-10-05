@@ -42,12 +42,13 @@ npm run zip
 
 ## Releasing New Versions
 
-Every push to `main` runs `.github/workflows/release.yml`. When the version in `wxt.config.ts` has no GitHub Release yet, the workflow:
+Every push to `main` (except Markdown-only changes) runs `.github/workflows/release.yml`, which:
+- Bumps the patch version in `package.json` (for example 1.1.1 to 1.1.2) and commits it, unless the current version has not been released yet
 - Builds the Chrome and Firefox ZIPs
 - Creates a GitHub Release with both ZIPs attached
 - Submits the new version to the Chrome Web Store and Firefox Add-ons for review
 
-To release, bump `version` in `wxt.config.ts` and push to `main`.
+For a minor or major release, set `version` in `package.json` yourself (for example `pnpm version minor --no-git-tag-version`) in your PR. The workflow releases that version as-is instead of bumping it.
 
 To check store credentials without submitting, run the workflow manually from the Actions tab with **dry_run** checked.
 
