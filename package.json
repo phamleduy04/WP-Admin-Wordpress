@@ -1,16 +1,16 @@
 {
   "name": "wp-admin-wordpress",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "wxt", 
-    "dev:firefox": "wxt -b firefox", 
-    "build": "wxt build", 
-    "build:firefox": "wxt build -b firefox", 
-    "zip": "wxt zip", 
-    "zip:firefox": "wxt zip -b firefox", 
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
     "postinstall": "wxt prepare"
   },
   "keywords": [],
