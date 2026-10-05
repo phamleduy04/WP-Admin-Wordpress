@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout codes
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: latest
       - name: 'Install Node'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: 'pnpm'
@@ -35,7 +35,7 @@ jobs:
 
       - name: Upload Chrome build
         id: chrome
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: chrome-pr-${{ github.event.pull_request.number }}
           path: .output/chrome-mv3/
@@ -43,7 +43,7 @@ jobs:
 
       - name: Upload Firefox build
         id: firefox
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: firefox-pr-${{ github.event.pull_request.number }}
           path: .output/firefox-mv2/
