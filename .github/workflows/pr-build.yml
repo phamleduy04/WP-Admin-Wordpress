@@ -14,24 +14,19 @@ jobs:
       - name: Checkout codes
         uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: latest
-      - name: 'Install Node'
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22.x'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          bun-version-file: package.json
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Build Chrome extension
-        run: pnpm run build
+        run: bun run build
 
       - name: Build Firefox extension
-        run: pnpm run build:firefox
+        run: bun run build:firefox
 
       - name: Upload Chrome build
         id: chrome

@@ -30,24 +30,19 @@ jobs:
         with:
           ref: main
 
-      - uses: pnpm/action-setup@v6
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: latest
-      - name: 'Install Node'
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22.x'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          bun-version-file: package.json
 
       - name: Bump patch version if the current one is already released
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "$(node -p "require('./package.json').version")" >/dev/null 2>&1; then
-            npm version patch --no-git-tag-version
-            VERSION=$(node -p "require('./package.json').version")
+          if gh release view "$(bun -p "require('./package.json').version")" >/dev/null 2>&1; then
+            bun pm version patch --no-git-tag-version
+            VERSION=$(bun -p "require('./package.json').version")
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -am "chore: release $VERSION"
@@ -55,23 +50,23 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install --frozen-lockfile
 
       - name: Build Chrome extension
-        run: pnpm run build
+        run: bun run build
 
       - name: Build Firefox extension
-        run: pnpm run build:firefox
+        run: bun run build:firefox
 
       - name: Create Chrome ZIP
-        run: pnpm run zip
+        run: bun run zip
 
       - name: Create Firefox ZIP
-        run: pnpm run zip:firefox
+        run: bun run zip:firefox
 
       - name: Get version from package.json
         id: get_version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(bun -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Check if release exists
         id: check_release
@@ -100,7 +95,7 @@ jobs:
       - name: Submit to Chrome Web Store and Firefox Add-ons
         if: steps.check_release.outputs.id == '' || inputs.dry_run
         run: |
-          pnpm wxt submit ${{ inputs.dry_run && '--dry-run' || '' }} \
+          bun --bun wxt submit ${{ inputs.dry_run && '--dry-run' || '' }} \
             --chrome-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-chrome.zip \
             --firefox-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip \
             --firefox-sources-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-sources.zip
