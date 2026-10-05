@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Validate store credentials without submitting'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -67,3 +72,19 @@ jobs:
             .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Submit to Chrome Web Store and Firefox Add-ons
+        if: steps.check_release.outputs.id == '' || inputs.dry_run
+        run: |
+          pnpm wxt submit ${{ inputs.dry_run && '--dry-run' || '' }} \
+            --chrome-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-chrome.zip \
+            --firefox-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-firefox.zip \
+            --firefox-sources-zip .output/wp-admin-wordpress-${{ steps.get_version.outputs.VERSION }}-sources.zip
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}

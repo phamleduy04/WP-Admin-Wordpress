@@ -42,20 +42,28 @@ npm run zip
 
 ## Releasing New Versions
 
-This project uses GitHub Actions to automatically build and release the extension when a new version tag is pushed.
+Every push to `main` runs `.github/workflows/release.yml`. When the version in `wxt.config.ts` has no GitHub Release yet, the workflow:
+- Builds the Chrome and Firefox ZIPs
+- Creates a GitHub Release with both ZIPs attached
+- Submits the new version to the Chrome Web Store and Firefox Add-ons for review
 
-To release a new version:
+To release, bump `version` in `wxt.config.ts` and push to `main`.
 
-1. Update the version number in `wxt.config.ts`
-2. Commit your changes
-3. Create and push a new tag:
+To check store credentials without submitting, run the workflow manually from the Actions tab with **dry_run** checked.
+
+The submit step needs these repository secrets: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`, `FIREFOX_EXTENSION_ID`, `FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`. Run `pnpm wxt submit init` locally for a guided walkthrough of where to find each value.
+
+### Testing a pull request
+
+Every PR runs `.github/workflows/pr-build.yml`, which attaches unpacked Chrome and Firefox builds to the run. Open the PR's **Checks** tab, choose **PR Build**, and download the artifact under **Artifacts**. Then unzip it and:
+- Chrome: go to `chrome://extensions/`, enable Developer mode, click "Load unpacked", and select the unzipped folder
+- Firefox: go to `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", and select `manifest.json` in the unzipped folder
+
+### Building from source (Firefox review)
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+pnpm install
+pnpm zip:firefox
 ```
 
-GitHub Actions will automatically:
-- Build both Chrome and Firefox versions
-- Create ZIP files for distribution
-- Create a new GitHub Release with the ZIP files attached
+The extension ZIP is written to `.output/`.
