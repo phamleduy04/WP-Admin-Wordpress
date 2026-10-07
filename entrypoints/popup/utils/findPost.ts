@@ -11,11 +11,11 @@ const REST_LINK = /^(.+)\/wp-json\/wp\/v2\/([\w-]+)\/(\d+)$/;
 
 /**
  * Function to read the REST link WordPress prints in the page head,
- * e.g. https://ece.utdallas.edu/wp-json/wp/v2/pages/491
+ * e.g. https://ece.utdallas.edu/wp-json/wp/v2/pages/491, and the body classes
  */
-function extractRestLink() {
+function readPage() {
     const link = document.querySelector<HTMLLinkElement>('link[rel="alternate"][type="application/json"]');
-    return link ? link.href : null;
+    return { restLink: link ? link.href : null, bodyClass: document.body.className };
 }
 
 /**
@@ -26,19 +26,42 @@ export const findPost = async (url: string, tabId: number): Promise<Post | null>
     try {
         const results = await browser.scripting.executeScript({
             target: { tabId },
-            func: extractRestLink
+            func: readPage
         });
 
         // The result is an array with the result from each frame
         // We just need the first one (main frame)
-        const match = results?.[0]?.result?.match(REST_LINK);
+        const page = results?.[0]?.result;
+        const match = page?.restLink?.match(REST_LINK);
         if (match) {
             return { siteUrl: match[1], restBase: match[2], id: match[3] };
         }
+        const post = page && findPostByBodyClass(url, page.bodyClass);
+        if (post) {
+            return post;
+        }
     } catch (error) {
-        console.error('Error reading the REST link:', error);
+        console.error('Error reading the page:', error);
     }
     return findPostBySlug(url);
+}
+
+/**
+ * Some sites strip the REST link (epics.utdallas.edu/projects/), but body_class() still prints
+ * the ID: "page page-id-1545" on a page, "single single-post postid-1515" on a post
+ */
+function findPostByBodyClass(url: string, bodyClass: string): Post | null {
+    const { hostname, origin, pathname } = new URL(url);
+    const [site] = pathname.split('/').filter(Boolean);
+    const siteUrl = hostname === 'sites.utdallas.edu' ? `${origin}/${site}` : origin;
+
+    const classes = bodyClass.split(/\s+/);
+    const idAfter = (prefix: string) => classes.find(name => name.startsWith(prefix))?.slice(prefix.length);
+    const pageId = idAfter('page-id-');
+    if (pageId) return { siteUrl, restBase: 'pages', id: pageId };
+    const postId = idAfter('postid-');
+    if (postId && classes.includes('single-post')) return { siteUrl, restBase: 'posts', id: postId };
+    return null;
 }
 
 /**
