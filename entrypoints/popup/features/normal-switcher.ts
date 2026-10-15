@@ -23,9 +23,11 @@ export function convertToNormalUrl(url: string): string | null {
       return `https://be.utdallas.edu${path}`;
     }
 
-    // Handle standard WordPress admin URLs
-    if (urlObj.pathname.includes("/wp-admin/")) {
-      return urlObj.origin;
+    // Handle standard WordPress admin URLs. Keep the path before /wp-admin/: on
+    // labs.utdallas.edu/ccst/wp-admin/ the site is labs.utdallas.edu/ccst/, not the domain
+    const adminIndex = urlObj.pathname.indexOf("/wp-admin/");
+    if (adminIndex !== -1) {
+      return urlObj.origin + urlObj.pathname.slice(0, adminIndex + 1);
     }
 
     return null;
