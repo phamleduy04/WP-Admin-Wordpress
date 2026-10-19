@@ -3,6 +3,7 @@
  * Opens the admin list searched by the post's title, scrolled to its row
  */
 import { findPost } from "../utils/findPost";
+import type { Editor } from "../utils/findEditor";
 
 // @ts-ignore
 const browser = globalThis.browser ?? globalThis.chrome;
@@ -29,17 +30,29 @@ export async function convertToListUrl(url: string, tabId: number): Promise<stri
   const { type, title } = await response.json();
   const search = new DOMParser().parseFromString(title.rendered, 'text/html').documentElement.textContent ?? '';
 
-  // Relevance puts title matches first: by default "Engineering Home" matches 95 pages and
-  // post 33 is not on the first screen. #post-<id> is the row's id in the list: the
-  // admin-list content script scrolls to it and outlines it
-  return `${post.siteUrl}/wp-admin/edit.php?post_type=${type}&s=${encodeURIComponent(search)}&orderby=relevance#post-${post.id}`;
+  return toListUrl(post.siteUrl, type, search, post.id);
 }
 
 /**
- * Set up the find in WordPress button
+ * Relevance puts title matches first: by default "Engineering Home" matches 95 pages and
+ * post 33 is not on the first screen. #post-<id> is the row's id in the list: the
+ * admin-list content script scrolls to it and outlines it
  */
-export function setupFindInWordPress(button: HTMLElement | null): void {
+function toListUrl(siteUrl: string, type: string, search: string, id: string): string {
+  return `${siteUrl}/wp-admin/edit.php?post_type=${type}&s=${encodeURIComponent(search)}&orderby=relevance#post-${id}`;
+}
+
+/**
+ * Set up the find in WordPress button. In the editor it opens a new tab, so unsaved
+ * changes stay where they are
+ */
+export function setupFindInWordPress(button: HTMLElement | null, editor: Editor | null): void {
   button?.addEventListener("click", async function () {
+    if (editor) {
+      await browser.tabs.create({ url: toListUrl(editor.siteUrl, editor.type, editor.title, editor.id) });
+      return;
+    }
+
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const currentUrl = tabs[0].url;
 
