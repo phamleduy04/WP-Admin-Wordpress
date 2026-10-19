@@ -8,6 +8,7 @@ A browser extension that helps navigate between WordPress admin pages and normal
 - Switch from WordPress admin pages to normal pages
 - Edit WordPress pages directly from the frontend
 - Find the current page in the WordPress admin list, with its row outlined
+- In the block editor: view the published post at its public address, open the site's Media Library, or find the post in the admin list, each in a new tab
 
 ## Installation
 

@@ -7,6 +7,12 @@
   <body>
     <div id="app">
       <h3>WordPress Admin Switcher</h3>
+      <div id="editorContext" hidden>
+        <div id="editorSite"><span id="editorSiteName"></span> <span id="editorMeta"></span></div>
+        <div id="editorTitle"></div>
+      </div>
+      <button id="viewLivePage" hidden>View Live Page</button>
+      <button id="openMediaLibrary" hidden>Open Media Library<svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 1.5h3v3M10.5 1.5L6 6M9 7v2.5a1 1 0 0 1-1 1H2.5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1H5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <button id="switchToAdmin">Switch to Admin Page</button>
       <button id="switchToNormal">Switch to Normal Page</button>
       <button id="editThisPage">Edit This Page</button>
